@@ -1,5 +1,6 @@
 import os
 import sys
+import time
 import os.path
 
 from bs4 import BeautifulSoup
@@ -12,7 +13,7 @@ def do_auth(user, pwd): #login using user and pwd, returns logged in session
     sess = requests.Session()
 
     login_page = sess.get('https://teamtreehouse.com/signin')
-    login_page_soup = BeautifulSoup(login_page.text)
+    login_page_soup = BeautifulSoup(login_page.text, "html.parser")
     
     token_val = login_page_soup.find('input', {'name': 'authenticity_token'}).get('value')
     utf_val = login_page_soup.find('input', {'name': 'utf8'}).get('value')
@@ -22,7 +23,7 @@ def do_auth(user, pwd): #login using user and pwd, returns logged in session
 
     profile_page = sess.post('https://teamtreehouse.com/person_session', data=post_data)
     
-    profile_page_soup = BeautifulSoup(profile_page.text)
+    profile_page_soup = BeautifulSoup(profile_page.text, "html.parser")
     auth_sign = profile_page_soup.title.text
     if auth_sign:
         if auth_sign.lower().find('home') != -1:
@@ -60,9 +61,17 @@ def get_msg(msg, path, kind): #returns success/error message based on the 'kind'
 
 def get_themes(category_name):
 # returns array of dictionaries including all courses from category 'category name'
-    category_url = 'http://teamtreehouse.com/library/topic:' + category_name.lower()
-    category_page = sess.get(category_url)
-    category_page = BeautifulSoup(category_page.text)
+    category_url = 'https://teamtreehouse.com/library/topic:' + category_name.lower()
+    category_page = ' '
+    while category_page == ' ':
+        try:
+            category_page = sess.get(category_url, headers = {'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.143 Safari/537.36'})
+        except Exception as e:
+            print(str(e))
+            print('Max Retries Exceeded, wait 5 sec')
+            time.sleep(5)
+            continue
+    category_page = BeautifulSoup(category_page.text, "html.parser")
 
     themes = category_page.select('li.card')
 
@@ -77,7 +86,7 @@ def get_themes(category_name):
 
     for key, theme in enumerate(themes_items):
         url = theme['theme_url']
-        description = BeautifulSoup(http_get(url)).find('div', 'hero-meta')
+        description = BeautifulSoup(http_get(url)).find('div', 'hero-meta', "html.parser")
         themes_items[key]['theme_description'] = description
 
     return themes_items
@@ -88,7 +97,7 @@ def get_themes_parts(themes):
     # returns modified 'themes' array of dictionaries
     for key, theme in enumerate(themes):
         url = theme['theme_url']
-        parts = BeautifulSoup(http_get(url)).find_all('div', {'class': 'contained featurette',
+        parts = BeautifulSoup(http_get(url), "html.parser").find_all('div', {'class': 'contained featurette',
                                                    'data-featurette': 'expandable-content-card'})
         themes[key]['theme_parts'] = parts
     return themes
@@ -142,7 +151,7 @@ def get_video_attach(themes):
 def parse_video_page(link):
 # returns dictionary including links to the videos based on the 'link'
     print ("Opening link", link)
-    video_page = BeautifulSoup(sess.get(link).text)
+    video_page = BeautifulSoup(sess.get(link).text, "html.parser")
     video_meta = video_page.select('#video-meta')[0]
     download_tab = video_page.select('#downloads-tab-content')[0]
     links = download_tab.select('a')
