@@ -1,4 +1,4 @@
-#Treehouse-saver v0.1
+#Treehouse-saver v0.1 [ :warning: not supported anymore]
 
 This script allow download video and other stuff from [teamtreehouse.com](http://teamtreehouse.com//). 
 You get video files, subtitles, and a description of each lesson as a html-document.
