@@ -1,6 +1,6 @@
 main_config = {
-    "user": "",
-    "password": "",
+    "user": "as.ankit2503@gmail.com",
+    "password": "excel@77",
     "path": "Lessons",
     "base_url": "http://teamtreehouse.com"
 }
